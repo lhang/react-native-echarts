@@ -1,0 +1,47 @@
+image: dockerniko/gitlab-ci-react-native-android
+
+variables:
+  GRADLE_USER_HOME: ./example/android/.gradle
+  ARTIFACTS_URL: ./example/android/app/build/outputs/apk/app-release.apk
+
+before_script:
+  - yarn config set registry http://registry.cnpm.dev.nongfenqi.com
+
+stages:
+  - test
+  - build
+  - publish
+  - notify
+
+test:
+  script:
+    - yarn config list
+    - yarn
+    - yarn test
+  only:
+    - develop
+    - release
+    - test
+  cache:
+    key: ${CI_BUILD_REF_NAME}
+    untracked: true
+    paths:
+      - node_modules/
+
+publish_to_cnpm:
+  stage: publish
+  script:
+    - npm publish --registry=http://registry.cnpm.dev.nongfenqi.com
+  only:
+    - release
+
+dingding:
+  stage: notify
+  script:
+    - version=`cat package.json | grep version | sed 's/[\", ]//g'`
+    - message=`printf "Necromancer 发布了新版本:\n%s" ${version}`
+    - echo $message
+    - |
+        curl -X POST   'https://oapi.dingtalk.com/robot/send?access_token=3092c4888ff350cb5aa7288746f355679156ce69d9c37c5c453cd14ac17cd925'   -H 'cache-control: no-cache'   -H 'content-type: application/json'  -d "{\"msgtype\": \"text\", \"text\": {\"content\": \"${message}\"}}"
+  only:
+    - release

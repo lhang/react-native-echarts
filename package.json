@@ -1,5 +1,5 @@
 {
-  "name": "native-echarts",
+  "name": "@nfq/native-echarts",
   "version": "0.4.0",
   "description": "echarts for react-native",
   "main": "src/index.js",
